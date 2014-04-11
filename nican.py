@@ -9,6 +9,14 @@ STATUS_OK = 0
 
 NC_TRUE = 1
 
+COMMAND_TYPE_WRITE = 0
+COMMAND_TYPE_READ = 1
+COMMAND_INDEX_STATUS = 1
+COMMAND_INDEX_LENGTH = 2
+COMMAND_INDEX_RESET = 4
+COMMAND_INDEX_ID = 51 # 0x33
+COMMAND_INDEX_MAX = 52 # 0x34
+
 #A T T R I B U T E   I D S
 NC_ATTR_BAUD_RATE = 0x80000007
 NC_ATTR_START_ON_OPEN = 0x80000006
@@ -21,23 +29,18 @@ NC_ATTR_CAN_COMP_XTD = 0x80010003
 NC_ATTR_CAN_MASK_XTD = 0x80010004
 NC_CAN_MASK_XTD_DONTCARE = 0x00000000
 
-class VCI_CAN_OBJ(Structure):
+class NCTYPE_CAN_FRAME(Structure):
     _fields_ = [
-            ('ID', c_uint),
-            ('TimeStamp', c_uint),
-            ('TimeFlag', c_byte),
-            ('SendType', c_byte),
-            ('RemoteFlag', c_byte),
-            ('ExternFlag', c_byte),
-            ('DataLen', c_byte),
-            ('Data', c_byte*8),
-            ('Reserved', c_byte*3),
+            ('ArbitrationId', c_ulong),
+            ('IsRemote', c_ubyte),
+            ('DataLength', c_ubyte),
+            ('Data', c_ubyte*8),
             ]
-
 
 _cur_dir = os.path.dirname(os.path.abspath(__file__))
 os.environ['PATH'] = os.path.pathsep.join([_cur_dir, os.environ['PATH']])
-_dll_file = os.path.join(_cur_dir, 'nican.dll')
+_dll_file = os.path.join(_cur_dir, 'Nican.dll')
+print _dll_file
 nican = windll.LoadLibrary(_dll_file)
 
 def NC_StatusToString(Status, SizeofString, ErrorString):
@@ -63,6 +66,10 @@ def NC_OpenObject(objName, objHandle):
     status = nican.ncOpenObject(objName, objHandle)
     processStatus(status, "NC_OpenObject")
 
+def NC_CloseObject(objName, objHandle):
+    status = nican.ncCloseObject(objHandle)
+    processStatus(status, "NC_CloseObject")
+
 def NC_ReadMult(objHandle, SizeofData, Data, ActualDataSize):
     status = nican.ncReadMult(objHandle, SizeofData, Data, ActualDataSize)
     processStatus(status, "NC_ReadMult")
@@ -70,4 +77,44 @@ def NC_ReadMult(objHandle, SizeofData, Data, ActualDataSize):
 def NC_Write(objHandle, SizeofData, Data):
     status = nican.ncWrite(objHandle, SizeofData, Data)
     processStatus(status, "NC_Write")
+    
+if __name__ == '__main__':
+    try:      
+        interface = (c_char*7)()
+        interface.value = "CAN0"
+        AttrIdList = (c_ulong*8)(NC_ATTR_BAUD_RATE, 
+                                    NC_ATTR_START_ON_OPEN, 
+                                    NC_ATTR_READ_Q_LEN, 
+                                    NC_ATTR_WRITE_Q_LEN, 
+                                    NC_ATTR_CAN_COMP_STD, 
+                                    NC_ATTR_CAN_MASK_STD, 
+                                    NC_ATTR_CAN_COMP_XTD,
+                                    NC_ATTR_CAN_MASK_XTD
+                                    )
+        AttrValueList = (c_ulong*8)(125000, NC_TRUE, 0, 1, 0, NC_CAN_MASK_STD_DONTCARE, 0, NC_CAN_MASK_XTD_DONTCARE)
+
+        objHandle = c_ulong()
+        #Configure the CAN Network Interface Object
+        NC_Config(interface, 8, AttrIdList, AttrValueList)
+        
+        #open the CAN Network Interface Object
+        NC_OpenObject(interface, byref(objHandle))
+        
+        Transmit = NCTYPE_CAN_FRAME()
+        Transmit.ArbitrationId = 1  #pole_id
+        Transmit.IsRemote = 0
+        Transmit.DataLength = 8
+        data = Transmit.Data
+        data[0] = 1                 #pole_id
+        data[1] = COMMAND_TYPE_WRITE
+        data[2] = COMMAND_INDEX_LENGTH
+        array = "%010X"%33          #length  
+        for i in range(5):
+            data[i+3] = int(array[i*2:i*2+2], 16)
+        NC_Write(objHandle, sizeof(Transmit), byref(Transmit))
+        
+        NC_CloseObject(objHandle)
+
+    except Exception, e:
+        print e
 

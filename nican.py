@@ -307,8 +307,9 @@ def NC_WriteMult(objHandle, SizeofData, FrameArray):
     
 if __name__ == '__main__':
     try:      
-        interface = (c_char*7)()
-        interface.value = "CAN1"
+#         interface = (c_char*7)()
+#         interface.value = "CAN1"
+        interface = "CAN1"
         AttrIdList = (c_ulong*8)(NC_ATTR_BAUD_RATE, 
                                     NC_ATTR_START_ON_OPEN, 
                                     NC_ATTR_READ_Q_LEN, 

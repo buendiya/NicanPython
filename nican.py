@@ -50,10 +50,10 @@ NC_ST_WRITE_MULT = 0x0000080
 #Frame type for CAN frames
 NC_FRMTYPE_DATA = 0
 NC_FRMTYPE_REMOTE = 0x01
-NC_FRMTYPE_COMM_ERR = 0x02     # Communication warning/error (NC_ATTR_LOG_COMM_ERRS)
-NC_FRMTYPE_RTSI = 0x03     # RTSI pulse (NC_ATTR_RTSI_MODE=NC_RTSI_TIME_ON_IN)
+NC_FRMTYPE_COMM_ERR = 0x02     #Communication warning/error (NC_ATTR_LOG_COMM_ERRS)
+NC_FRMTYPE_RTSI = 0x03     #RTSI pulse (NC_ATTR_RTSI_MODE=NC_RTSI_TIME_ON_IN)
 NC_FRMTYPE_TRIG_START = 0x04
-NC_FRMTYPE_DELAY = 0x05    # Adds a delay between 2 timestamped frames.
+NC_FRMTYPE_DELAY = 0x05    #Adds a delay between 2 timestamped frames.
 NC_FRMTYPE_BUS_ERR = 0x06 
 NC_FRMTYPE_TRANSCEIVER_ERR = 0x07
 
@@ -304,12 +304,26 @@ def NC_WriteMult(objHandle, SizeofData, FrameArray):
     status = nican.ncWriteMult(objHandle, SizeofData, FrameArray)
     processStatus(status, "NC_WriteMult")
 
+# Ni-CAN attributes
+default_num_attrs = 8
+default_nican_config = {
+                        NC_ATTR_BAUD_RATE: 250000, 
+                        NC_ATTR_START_ON_OPEN: NC_TRUE, 
+                        NC_ATTR_READ_Q_LEN: 150, 
+                        NC_ATTR_WRITE_Q_LEN: 2, 
+                        NC_ATTR_CAN_COMP_STD: 0, 
+                        NC_ATTR_CAN_MASK_STD: NC_CAN_MASK_STD_DONTCARE, 
+                        NC_ATTR_CAN_COMP_XTD: 0,
+                        NC_ATTR_CAN_MASK_XTD: NC_CAN_MASK_XTD_DONTCARE,
+                        }
+
+default_interface = 'CAN1'
     
 if __name__ == '__main__':
     try:      
 #         interface = (c_char*7)()
 #         interface.value = "CAN1"
-        interface = "CAN1"
+        interface = default_interface
         AttrIdList = (c_ulong*8)(NC_ATTR_BAUD_RATE, 
                                     NC_ATTR_START_ON_OPEN, 
                                     NC_ATTR_READ_Q_LEN, 

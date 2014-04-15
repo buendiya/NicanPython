@@ -324,16 +324,19 @@ if __name__ == '__main__':
 #         interface = (c_char*7)()
 #         interface.value = "CAN1"
         interface = default_interface
-        AttrIdList = (c_ulong*8)(NC_ATTR_BAUD_RATE, 
-                                    NC_ATTR_START_ON_OPEN, 
-                                    NC_ATTR_READ_Q_LEN, 
-                                    NC_ATTR_WRITE_Q_LEN, 
-                                    NC_ATTR_CAN_COMP_STD, 
-                                    NC_ATTR_CAN_MASK_STD, 
-                                    NC_ATTR_CAN_COMP_XTD,
-                                    NC_ATTR_CAN_MASK_XTD
-                                    )
-        AttrValueList = (c_ulong*8)(250000, NC_TRUE, 150, 2, 0, NC_CAN_MASK_STD_DONTCARE, 0, NC_CAN_MASK_XTD_DONTCARE)
+#         AttrIdList = (c_ulong*8)(NC_ATTR_BAUD_RATE, 
+#                                     NC_ATTR_START_ON_OPEN, 
+#                                     NC_ATTR_READ_Q_LEN, 
+#                                     NC_ATTR_WRITE_Q_LEN, 
+#                                     NC_ATTR_CAN_COMP_STD, 
+#                                     NC_ATTR_CAN_MASK_STD, 
+#                                     NC_ATTR_CAN_COMP_XTD,
+#                                     NC_ATTR_CAN_MASK_XTD
+#                                     )
+#         AttrValueList = (c_ulong*8)(250000, NC_TRUE, 150, 2, 0, NC_CAN_MASK_STD_DONTCARE, 0, NC_CAN_MASK_XTD_DONTCARE)
+        
+        AttrIdList = (c_ulong*8)(*(tuple(default_nican_config.keys())))
+        AttrValueList = (c_ulong*8)(*(tuple(default_nican_config.values())))
 
         objHandle = c_ulong()
         # Configure the CAN Network Interface Object
